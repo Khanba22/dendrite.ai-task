@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  server:
+    build: ./server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server:/usr/src/app
+    depends_on:
+      - client
+      - keycloak
+
+  client:
+    build: ./client
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/usr/src/app
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest  # Updated image name
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      KEYCLOAK_IMPORT: /opt/keycloak/data/import/realm-export.json
+    ports:
+      - "8080:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data  # Updated volume path
+    command:
+      - start
+      - --http-port=8080  # Optional: specify the port if needed
+      - --db-url=jdbc:h2:mem:mydb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE  # Optional: specify the database URL if using H2
+      - --import-realm
+      - --import-file=/opt/keycloak/data/import/realm-export.json  # Optional: specify the path to import the realm
+    restart: always
+
+volumes:
+  keycloak_data:
